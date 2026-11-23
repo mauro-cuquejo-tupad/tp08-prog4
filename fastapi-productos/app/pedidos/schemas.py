@@ -22,15 +22,9 @@ class PedidoCreate(BaseModel):
     @field_validator("detalles")
     @classmethod
     def validar_detalles(cls, v: List[DetallePedidoItem]):
-        if not v:
-            raise ValueError("El pedido debe tener al menos un detalle")
-        vistos = set()
-        for item in v:
-            if item.producto_id in vistos:
-                raise ValueError(f"El producto_id {item.producto_id} está duplicado en los detalles")
-            vistos.add(item.producto_id)
-            if item.cantidad < 1:
-                raise ValueError(f"La cantidad para el producto {item.producto_id} debe ser mayor o igual a 1")
+        ids = [item.producto_id for item in v]
+        if len(ids) != len(set(ids)):
+            raise ValueError("No se permiten productos duplicados en los detalles del pedido")
         return v
 
 class PedidoUpdateEstado(BaseModel):
