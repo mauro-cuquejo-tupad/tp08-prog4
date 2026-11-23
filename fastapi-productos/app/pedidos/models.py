@@ -1,5 +1,5 @@
 from typing import Optional, List
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlmodel import SQLModel, Field, Relationship
 
 class DetallePedido(SQLModel, table=True):
@@ -17,7 +17,7 @@ class Pedido(SQLModel, table=True):
     __tablename__ = "pedido"
 
     id: Optional[int] = Field(default=None, primary_key=True)
-    fecha: datetime = Field(default_factory=datetime.utcnow)
+    fecha: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     estado: str = Field(default="PENDIENTE")  # PENDIENTE, CONFIRMADO, ENTREGADO, CANCELADO
     total: float = Field(default=0.0, ge=0)
     deleted_at: Optional[datetime] = Field(default=None)
