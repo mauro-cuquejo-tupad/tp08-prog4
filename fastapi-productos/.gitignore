@@ -32,9 +32,9 @@ venv/
 ENV/
 env/
 
-# Environment variables
-.env
-!.env.example
+# Environment variables (incluido para corrección de TPs)
+# .env
+
 
 # IDEs and Editors
 .vscode/

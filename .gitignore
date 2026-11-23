@@ -20,10 +20,10 @@ __pycache__/
 *$py.class
 *.egg-info/
 
-# Environment variables
-.env
-.env.*
-!.env.example
+# Environment variables (incluido para corrección de TPs)
+# .env
+# .env.*
+
 
 # Database files
 *.db
