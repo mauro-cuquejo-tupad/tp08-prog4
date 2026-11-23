@@ -12,6 +12,10 @@ engine = create_engine(
 )
 
 def create_db_and_tables():
+    reset_db = os.getenv("RESET_DB_ON_STARTUP", "false").lower() in ("true", "1", "yes")
+    if reset_db:
+        print("⚠️ [RESET_DB_ON_STARTUP] Reiniciando tablas de la base de datos (drop_all)...")
+        SQLModel.metadata.drop_all(engine)
     SQLModel.metadata.create_all(engine)
 
     
