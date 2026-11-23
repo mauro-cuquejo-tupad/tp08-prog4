@@ -7,7 +7,7 @@ import {
   getFilteredRowModel,
   flexRender,
   createColumnHelper,
-  SortingState,
+  type SortingState,
 } from "@tanstack/react-table";
 import type { Producto } from "../types/producto";
 import { EmptyState } from "./StatusStates";
