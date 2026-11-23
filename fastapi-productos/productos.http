@@ -1,0 +1,164 @@
+@baseUrl = http://127.0.0.1:8000
+
+### ==========================================
+### MÓDULO: CATEGORÍAS
+### ==========================================
+
+### 1. Listar Categorías
+GET {{baseUrl}}/categorias/
+
+### 2. Crear Primera Categoría (ID: 1)
+POST {{baseUrl}}/categorias/
+Content-Type: application/json
+
+{
+  "nombre": "Pizzas",
+  "descripcion": "Pizzas artesanales con masa fresca"
+}
+
+### 3. Crear Segunda Categoría (ID: 2)
+POST {{baseUrl}}/categorias/
+Content-Type: application/json
+
+{
+  "nombre": "Hamburguesas",
+  "descripcion": "Hamburguesas gourmet con ingredientes frescos"
+}
+
+### 4. Crear Tercera Categoría para eliminar (ID: 3)
+POST {{baseUrl}}/categorias/
+Content-Type: application/json
+
+{
+  "nombre": "Temporal Descartable",
+  "descripcion": "Categoría para probar eliminación"
+}
+
+### 5. Detalle de Categoría (ID: 1)
+GET {{baseUrl}}/categorias/1
+
+### 6. Actualizar Categoría (ID: 1)
+PUT {{baseUrl}}/categorias/1
+Content-Type: application/json
+
+{
+  "nombre": "Pizzas Especiales",
+  "descripcion": "Pizzas artesanales y a la piedra con ingredientes gourmet"
+}
+
+### 7. Eliminar Categoría (ID: 3 - responde 204)
+DELETE {{baseUrl}}/categorias/3
+
+### 8. Verificar error 404 al buscar categoría eliminada
+GET {{baseUrl}}/categorias/3
+
+
+### ==========================================
+### MÓDULO: PRODUCTOS
+### ==========================================
+
+### 9. Crear Primer Producto (ID: 1)
+POST {{baseUrl}}/productos/
+Content-Type: application/json
+
+{
+  "nombre": "Pizza Fugazzeta Rellena",
+  "descripcion": "Masa artesanal con abundante mozzarella y cebolla",
+  "precio_base": 12500.50,
+  "imagenes_url": [
+    "https://ejemplo.com/fugazzeta1.jpg",
+    "https://ejemplo.com/fugazzeta2.jpg"
+  ],
+  "disponible": true
+}
+
+### 10. Crear Segundo Producto (ID: 2)
+POST {{baseUrl}}/productos/
+Content-Type: application/json
+
+{
+  "nombre": "Hamburguesa Doble Cheddar",
+  "descripcion": "Medallón de carne con queso cheddar y bacon",
+  "precio_base": 9800.00,
+  "imagenes_url": [
+    "https://ejemplo.com/burger.jpg"
+  ],
+  "disponible": true
+}
+
+### 11. Crear Tercer Producto para eliminar (ID: 3)
+POST {{baseUrl}}/productos/
+Content-Type: application/json
+
+{
+  "nombre": "Producto Temporal",
+  "descripcion": "Producto para verificar borrado",
+  "precio_base": 1500.00,
+  "imagenes_url": [],
+  "disponible": false
+}
+
+### 12. Listar Productos
+GET {{baseUrl}}/productos/?skip=0&limit=10
+
+### 13. Detalle Producto (ID: 1)
+GET {{baseUrl}}/productos/1
+
+### 14. Actualizar Producto (ID: 1)
+PUT {{baseUrl}}/productos/1
+Content-Type: application/json
+
+{
+  "nombre": "Pizza Fugazzeta Rellena Especial",
+  "descripcion": "Masa artesanal con jamón, queso y abundante cebolla caramelizada",
+  "precio_base": 14000.00,
+  "imagenes_url": [
+    "https://ejemplo.com/fugazzeta_nueva.jpg"
+  ],
+  "disponible": true
+}
+
+### 15. Eliminar Producto (ID: 3 - responde 204)
+DELETE {{baseUrl}}/productos/3
+
+### 16. Validación precio no negativo (error 422)
+POST {{baseUrl}}/productos/
+Content-Type: application/json
+
+{
+  "nombre": "Producto Invalido",
+  "descripcion": "Error por precio negativo",
+  "precio_base": -50.0,
+  "imagenes_url": [],
+  "disponible": true
+}
+
+
+### ==========================================
+### MÓDULO: PRODUCTO - CATEGORÍA (Relación N:M)
+### ==========================================
+
+### 17. Asignar Categoría a Producto (POST /productos/{id}/categorias con categoria_id en cuerpo)
+POST {{baseUrl}}/productos/1/categorias
+Content-Type: application/json
+
+{
+  "categoria_id": 1
+}
+
+### 18. Asignar otra Categoría al mismo Producto (ej. ID: 2)
+POST {{baseUrl}}/productos/1/categorias
+Content-Type: application/json
+
+{
+  "categoria_id": 2
+}
+
+### 19. Listar Categorías de un Producto (GET /productos/{id}/categorias)
+GET {{baseUrl}}/productos/1/categorias
+
+### 20. Quitar Categoría de un Producto (DELETE /productos/{id}/categorias/{categoria_id} - responde 204)
+DELETE {{baseUrl}}/productos/1/categorias/2
+
+### 21. Verificar que quedó solo la categoría 1 asignada
+GET {{baseUrl}}/productos/1/categorias

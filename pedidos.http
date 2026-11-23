@@ -1,0 +1,106 @@
+### Variables
+@baseUrl = http://localhost:8000
+
+### 1. Listar pedidos inicialmente (GET /pedidos)
+GET {{baseUrl}}/pedidos
+Accept: application/json
+
+### 2. Error 422: Crear pedido sin detalles (lista vacía)
+POST {{baseUrl}}/pedidos
+Content-Type: application/json
+
+{
+  "detalles": []
+}
+
+### 3. Error 422: Crear pedido con cantidad inválida (< 1)
+POST {{baseUrl}}/pedidos
+Content-Type: application/json
+
+{
+  "detalles": [
+    {
+      "producto_id": 1,
+      "cantidad": 0
+    }
+  ]
+}
+
+### 4. Error 422: Crear pedido con productos repetidos
+POST {{baseUrl}}/pedidos
+Content-Type: application/json
+
+{
+  "detalles": [
+    {
+      "producto_id": 1,
+      "cantidad": 2
+    },
+    {
+      "producto_id": 1,
+      "cantidad": 1
+    }
+  ]
+}
+
+### 5. Error 404: Crear pedido con producto inexistente (demuestra rollback en UoW)
+POST {{baseUrl}}/pedidos
+Content-Type: application/json
+
+{
+  "detalles": [
+    {
+      "producto_id": 99999,
+      "cantidad": 2
+    }
+  ]
+}
+
+### 6. Éxito 201: Crear pedido válido con sus detalles
+# Nota: Asegurarse de tener productos creados (por ejemplo con seed.py o POST /productos)
+POST {{baseUrl}}/pedidos
+Content-Type: application/json
+
+{
+  "detalles": [
+    {
+      "producto_id": 1,
+      "cantidad": 2
+    }
+  ]
+}
+
+### 7. Consultar detalle del pedido creado (GET /pedidos/{id})
+GET {{baseUrl}}/pedidos/1
+Accept: application/json
+
+### 8. Error 404: Consultar pedido inexistente
+GET {{baseUrl}}/pedidos/99999
+Accept: application/json
+
+### 9. Actualizar estado del pedido (PUT /pedidos/{id})
+PUT {{baseUrl}}/pedidos/1
+Content-Type: application/json
+
+{
+  "estado": "CONFIRMADO"
+}
+
+### 10. Error 422: Actualizar con estado inválido
+PUT {{baseUrl}}/pedidos/1
+Content-Type: application/json
+
+{
+  "estado": "ESTADO_INVENTADO"
+}
+
+### 11. Eliminar pedido (borrado lógico: completa deleted_at y responde 204)
+DELETE {{baseUrl}}/pedidos/1
+
+### 12. Error 404 tras borrado lógico: consultar pedido eliminado
+GET {{baseUrl}}/pedidos/1
+Accept: application/json
+
+### 13. Verificar que el pedido eliminado ya no figura en el listado activo
+GET {{baseUrl}}/pedidos
+Accept: application/json
