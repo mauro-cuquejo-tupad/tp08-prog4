@@ -1,0 +1,106 @@
+@baseUrl = http://localhost:8000
+
+# Archivo de pruebas con REST Client para el módulo de Ingredientes
+# Ejecutar las peticiones en orden de arriba hacia abajo.
+
+### 1. Listar ingredientes inicialmente - 200
+GET {{baseUrl}}/ingredientes/
+Accept: application/json
+
+### 2. Error 422: Crear ingrediente con nombre vacío o solo espacios (RN-10)
+POST {{baseUrl}}/ingredientes/
+Content-Type: application/json
+
+{
+  "nombre": "   "
+}
+
+### 3. Error 422: Crear ingrediente sin el campo nombre
+POST {{baseUrl}}/ingredientes/
+Content-Type: application/json
+
+{}
+
+### 4. Crear ingrediente exitosamente - 201
+# @name ingrediente1
+POST {{baseUrl}}/ingredientes/
+Content-Type: application/json
+
+{
+  "nombre": "Albahaca Fresca"
+}
+
+### 5. Crear segundo ingrediente - 201
+# @name ingrediente2
+POST {{baseUrl}}/ingredientes/
+Content-Type: application/json
+
+{
+  "nombre": "Aceite de Oliva Extra Virgen"
+}
+
+### 6. Error 409: Crear ingrediente con nombre duplicado (case-insensitive)
+POST {{baseUrl}}/ingredientes/
+Content-Type: application/json
+
+{
+  "nombre": "albahaca fresca"
+}
+
+### 7. Obtener ingrediente por ID - 200
+GET {{baseUrl}}/ingredientes/{{ingrediente1.response.body.$.id}}
+Accept: application/json
+
+### 8. Error 404: Obtener ingrediente inexistente (RN-11)
+GET {{baseUrl}}/ingredientes/999999
+Accept: application/json
+
+### 9. Error 422: Obtener ingrediente con ID inválido (Path gt=0)
+GET {{baseUrl}}/ingredientes/0
+Accept: application/json
+
+### 10. Actualizar ingrediente - 200
+PUT {{baseUrl}}/ingredientes/{{ingrediente1.response.body.$.id}}
+Content-Type: application/json
+
+{
+  "nombre": "Albahaca Orgánica Fresca"
+}
+
+### 11. Error 422: Actualizar con nombre vacío (RN-10)
+PUT {{baseUrl}}/ingredientes/{{ingrediente1.response.body.$.id}}
+Content-Type: application/json
+
+{
+  "nombre": "  "
+}
+
+### 12. Error 409: Actualizar con nombre ya utilizado por otro ingrediente
+PUT {{baseUrl}}/ingredientes/{{ingrediente2.response.body.$.id}}
+Content-Type: application/json
+
+{
+  "nombre": "Albahaca Orgánica Fresca"
+}
+
+### 13. Error 404: Actualizar ingrediente inexistente (RN-11)
+PUT {{baseUrl}}/ingredientes/999999
+Content-Type: application/json
+
+{
+  "nombre": "Ingrediente Fantasma"
+}
+
+### 14. Eliminar ingrediente - 204
+DELETE {{baseUrl}}/ingredientes/{{ingrediente1.response.body.$.id}}
+
+### 15. Error 404: Consultar el ingrediente eliminado (RN-11)
+GET {{baseUrl}}/ingredientes/{{ingrediente1.response.body.$.id}}
+Accept: application/json
+
+### 16. Error 404: Intentar eliminar nuevamente el mismo ingrediente (RN-11)
+DELETE {{baseUrl}}/ingredientes/{{ingrediente1.response.body.$.id}}
+
+### 17. Listar todos los ingredientes tras las operaciones - 200
+GET {{baseUrl}}/ingredientes/
+Accept: application/json
