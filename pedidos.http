@@ -1,11 +1,59 @@
-### Variables
 @baseUrl = http://localhost:8000
 
-### 1. Listar pedidos inicialmente (GET /pedidos)
-GET {{baseUrl}}/pedidos
-Accept: application/json
+# Este archivo crea sus propios productos y guarda los ids que devuelve
+# la API (con "# @name"), funcionando de forma dinámica e independiente.
+# Ejecutar las peticiones en orden, de arriba hacia abajo.
 
-### 2. Error 422: Crear pedido sin detalles (lista vacía)
+### 1. Preparación: crear producto Pizza Especial - 201
+# @name pizza
+POST {{baseUrl}}/productos/
+Content-Type: application/json
+
+{
+  "nombre": "Pizza Especial Jamón y Morrón",
+  "descripcion": "Muzzarella, jamón cocido y morrones asados",
+  "precio_base": 9500,
+  "imagenes_url": [],
+  "disponible": true
+}
+
+### 2. Preparación: crear producto Cerveza Artesanal - 201
+# @name cerveza
+POST {{baseUrl}}/productos/
+Content-Type: application/json
+
+{
+  "nombre": "Cerveza IPA 500ml",
+  "descripcion": "Cerveza artesanal rubia lupulada",
+  "precio_base": 3200,
+  "imagenes_url": [],
+  "disponible": true
+}
+
+### 3. Crear pedido con dos detalles - 201 (total = 1 x 9500 + 2 x 3200 = 15900)
+# @name pedido1
+POST {{baseUrl}}/pedidos
+Content-Type: application/json
+
+{
+  "detalles": [
+    { "producto_id": {{pizza.response.body.$.id}}, "cantidad": 1 },
+    { "producto_id": {{cerveza.response.body.$.id}}, "cantidad": 2 }
+  ]
+}
+
+### 4. Crear pedido con un detalle - 201 (total = 3 x 3200 = 9600)
+# @name pedido2
+POST {{baseUrl}}/pedidos
+Content-Type: application/json
+
+{
+  "detalles": [
+    { "producto_id": {{cerveza.response.body.$.id}}, "cantidad": 3 }
+  ]
+}
+
+### 5. Error 422: Crear pedido con la lista de detalles vacía (RN-12)
 POST {{baseUrl}}/pedidos
 Content-Type: application/json
 
@@ -13,94 +61,118 @@ Content-Type: application/json
   "detalles": []
 }
 
-### 3. Error 422: Crear pedido con cantidad inválida (< 1)
+### 6. Error 422: Crear pedido sin el campo detalles
+POST {{baseUrl}}/pedidos
+Content-Type: application/json
+
+{}
+
+### 7. Error 422: Crear pedido con cantidad 0 (< 1)
 POST {{baseUrl}}/pedidos
 Content-Type: application/json
 
 {
   "detalles": [
-    {
-      "producto_id": 1,
-      "cantidad": 0
-    }
+    { "producto_id": {{pizza.response.body.$.id}}, "cantidad": 0 }
   ]
 }
 
-### 4. Error 422: Crear pedido con productos repetidos
+### 8. Error 422: Crear pedido con un mismo producto repetido (RN-12)
 POST {{baseUrl}}/pedidos
 Content-Type: application/json
 
 {
   "detalles": [
-    {
-      "producto_id": 1,
-      "cantidad": 2
-    },
-    {
-      "producto_id": 1,
-      "cantidad": 1
-    }
+    { "producto_id": {{pizza.response.body.$.id}}, "cantidad": 1 },
+    { "producto_id": {{pizza.response.body.$.id}}, "cantidad": 2 }
   ]
 }
 
-### 5. Error 404: Crear pedido con producto inexistente (demuestra rollback en UoW)
+### 9. Error 404: Crear pedido con un producto inexistente (demuestra rollback en UoW)
+# El primer detalle es válido: el pedido llega a insertarse con flush,
+# pero al fallar el segundo detalle el Unit of Work revierte toda la transacción.
 POST {{baseUrl}}/pedidos
 Content-Type: application/json
 
 {
   "detalles": [
-    {
-      "producto_id": 99999,
-      "cantidad": 2
-    }
+    { "producto_id": {{pizza.response.body.$.id}}, "cantidad": 1 },
+    { "producto_id": 999999, "cantidad": 1 }
   ]
 }
 
-### 6. Éxito 201: Crear pedido válido con sus detalles
-# Nota: Asegurarse de tener productos creados (por ejemplo con seed.py o POST /productos)
-POST {{baseUrl}}/pedidos
-Content-Type: application/json
+### 10. Listar pedidos - 200 (el pedido fallido del caso 9 no figura)
+GET {{baseUrl}}/pedidos
 
-{
-  "detalles": [
-    {
-      "producto_id": 1,
-      "cantidad": 2
-    }
-  ]
-}
+### 11. Detalle del pedido 1 con sus detalles - 200
+GET {{baseUrl}}/pedidos/{{pedido1.response.body.$.id}}
 
-### 7. Consultar detalle del pedido creado (GET /pedidos/{id})
-GET {{baseUrl}}/pedidos/1
-Accept: application/json
+### 12. Error 404: Detalle de un pedido inexistente (RN-13)
+GET {{baseUrl}}/pedidos/999999
 
-### 8. Error 404: Consultar pedido inexistente
-GET {{baseUrl}}/pedidos/99999
-Accept: application/json
+### 13. Error 422: Detalle con id 0 (Path gt=0)
+GET {{baseUrl}}/pedidos/0
 
-### 9. Actualizar estado del pedido (PUT /pedidos/{id})
-PUT {{baseUrl}}/pedidos/1
+### 14. Cambiar el estado del pedido 1 a CONFIRMADO - 200
+PUT {{baseUrl}}/pedidos/{{pedido1.response.body.$.id}}
 Content-Type: application/json
 
 {
   "estado": "CONFIRMADO"
 }
 
-### 10. Error 422: Actualizar con estado inválido
-PUT {{baseUrl}}/pedidos/1
+### 15. Cambiar el estado del pedido 1 a ENTREGADO - 200
+PUT {{baseUrl}}/pedidos/{{pedido1.response.body.$.id}}
 Content-Type: application/json
 
 {
-  "estado": "ESTADO_INVENTADO"
+  "estado": "ENTREGADO"
 }
 
-### 11. Eliminar pedido (borrado lógico: completa deleted_at y responde 204)
-DELETE {{baseUrl}}/pedidos/1
+### 16. Error 422: Cambiar a un estado fuera de los permitidos
+PUT {{baseUrl}}/pedidos/{{pedido1.response.body.$.id}}
+Content-Type: application/json
 
-### 12. Error 404 tras borrado lógico: consultar pedido eliminado
-GET {{baseUrl}}/pedidos/1
-Accept: application/json
+{
+  "estado": "EN_CAMINO"
+}
 
-### 13. Verificar que el pedido eliminado ya no figura en el listado activo
+### 17. Error 422: Cambiar a un estado en minúsculas
+PUT {{baseUrl}}/pedidos/{{pedido1.response.body.$.id}}
+Content-Type: application/json
+
+{
+  "estado": "pendiente"
+}
+
+### 18. Error 404: Cambiar el estado de un pedido inexistente (RN-13)
+PUT {{baseUrl}}/pedidos/999999
+Content-Type: application/json
+
+{
+  "estado": "CANCELADO"
+}
+
+### 19. Borrado lógico del pedido 2 - 204
+DELETE {{baseUrl}}/pedidos/{{pedido2.response.body.$.id}}
+
+### 20. Error 404: Ver el pedido 2 eliminado (RN-13)
+GET {{baseUrl}}/pedidos/{{pedido2.response.body.$.id}}
+
+### 21. Error 404: Cambiar el estado del pedido 2 eliminado (RN-13)
+PUT {{baseUrl}}/pedidos/{{pedido2.response.body.$.id}}
+Content-Type: application/json
+
+{
+  "estado": "CANCELADO"
+}
+
+### 22. Error 404: Eliminar otra vez el pedido 2 (RN-13)
+DELETE {{baseUrl}}/pedidos/{{pedido2.response.body.$.id}}
+
+### 23. Listar pedidos - 200 (el pedido 2 ya no aparece en el listado activo)
 GET {{baseUrl}}/pedidos
-Accept: application/json
+
+### 24. Error 409: Eliminar un producto que figura en un pedido existente
+# La pizza está en el pedido 1: la clave foránea impide borrarlo y el backend responde 409
+DELETE {{baseUrl}}/productos/{{pizza.response.body.$.id}}

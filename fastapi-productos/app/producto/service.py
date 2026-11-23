@@ -58,6 +58,8 @@ def actualizar_total(id: int, data: ProductoCreate, session: Session) -> Product
     return ProductoRead.model_validate(producto)
 
 
+from sqlalchemy.exc import IntegrityError
+
 def eliminar(id: int, session: Session) -> None:
     producto = repo.get_by_id(id, session)
     if not producto:
@@ -66,7 +68,14 @@ def eliminar(id: int, session: Session) -> None:
             detail=f"El producto de id {id} no existe"
         )
 
-    repo.delete_producto(producto, session)
+    try:
+        repo.delete_producto(producto, session)
+    except IntegrityError:
+        session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"No se puede eliminar el producto con id {id} porque está asociado a pedidos u otros registros existentes"
+        )
 
 
 def agregar_categoria(producto_id: int, categoria_id: int, session: Session) -> ProductoFullRead:

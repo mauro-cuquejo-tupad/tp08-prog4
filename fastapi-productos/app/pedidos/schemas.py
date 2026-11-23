@@ -1,8 +1,8 @@
 from pydantic import BaseModel, ConfigDict, Field, field_validator
-from typing import List, Optional
+from typing import List, Optional, Literal
 from datetime import datetime
 
-ESTADOS_VALIDOS = {"PENDIENTE", "CONFIRMADO", "ENTREGADO", "CANCELADO"}
+EstadoPedido = Literal["PENDIENTE", "CONFIRMADO", "ENTREGADO", "CANCELADO"]
 
 class DetallePedidoItem(BaseModel):
     producto_id: int = Field(..., gt=0)
@@ -28,15 +28,7 @@ class PedidoCreate(BaseModel):
         return v
 
 class PedidoUpdateEstado(BaseModel):
-    estado: str
-
-    @field_validator("estado")
-    @classmethod
-    def validar_estado(cls, v: str):
-        v_upper = v.upper().strip()
-        if v_upper not in ESTADOS_VALIDOS:
-            raise ValueError(f"Estado inválido. Debe ser uno de: {', '.join(sorted(ESTADOS_VALIDOS))}")
-        return v_upper
+    estado: EstadoPedido
 
 class PedidoRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -46,4 +38,6 @@ class PedidoRead(BaseModel):
     estado: str
     total: float
     deleted_at: Optional[datetime] = None
+
+class PedidoReadFull(PedidoRead):
     detalles: List[DetallePedidoRead] = []
