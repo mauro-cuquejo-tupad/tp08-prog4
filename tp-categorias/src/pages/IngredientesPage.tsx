@@ -10,6 +10,7 @@ import {
 import { IngredienteList } from "../components/IngredienteList";
 import { IngredienteModal } from "../components/IngredienteModal";
 import { LoadingState, ErrorState } from "../components/StatusStates";
+import { ConfirmModal, AlertModal } from "../components/FeedbackModals";
 
 export const IngredientesPage: React.FC = () => {
   const queryClient = useQueryClient();
@@ -17,6 +18,10 @@ export const IngredientesPage: React.FC = () => {
   const [modalAbierto, setModalAbierto] = useState(false);
   const [ingredienteSeleccionado, setIngredienteSeleccionado] = useState<Ingrediente | null>(null);
   const [apiError, setApiError] = useState<string | null>(null);
+
+  // Estados para modales de feedback
+  const [idAEliminar, setIdAEliminar] = useState<number | null>(null);
+  const [alertaMensaje, setAlertaMensaje] = useState<string | null>(null);
 
   const {
     data: ingredientes = [],
@@ -56,9 +61,11 @@ export const IngredientesPage: React.FC = () => {
     mutationFn: (id: number) => deleteIngrediente(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["ingredientes"] });
+      setIdAEliminar(null);
     },
     onError: (err: Error) => {
-      alert(`No se pudo eliminar el ingrediente: ${err.message}`);
+      setAlertaMensaje(`No se pudo eliminar el ingrediente: ${err.message}`);
+      setIdAEliminar(null);
     },
   });
 
@@ -86,12 +93,6 @@ export const IngredientesPage: React.FC = () => {
       updateMutation.mutate({ id: ingredienteSeleccionado.id, data });
     } else {
       createMutation.mutate(data);
-    }
-  };
-
-  const handleDelete = (id: number) => {
-    if (window.confirm("¿Está seguro de que desea eliminar este ingrediente?")) {
-      deleteMutation.mutate(id);
     }
   };
 
@@ -125,10 +126,11 @@ export const IngredientesPage: React.FC = () => {
         <IngredienteList
           ingredientes={ingredientes}
           onEdit={abrirParaEditar}
-          onDelete={handleDelete}
+          onDelete={(id) => setIdAEliminar(id)}
         />
       )}
 
+      {/* Modal Formulario */}
       <IngredienteModal
         isOpen={modalAbierto}
         onClose={cerrarModal}
@@ -136,6 +138,29 @@ export const IngredientesPage: React.FC = () => {
         ingredienteSeleccionado={ingredienteSeleccionado}
         isLoading={isMutating}
         apiError={apiError}
+      />
+
+      {/* Modal de Confirmación de Eliminación */}
+      <ConfirmModal
+        isOpen={idAEliminar !== null}
+        title="Eliminar Ingrediente"
+        message="¿Está seguro de que desea eliminar este ingrediente? Esta acción no se puede deshacer."
+        confirmText="Eliminar"
+        isDestructive={true}
+        onConfirm={() => {
+          if (idAEliminar !== null) {
+            deleteMutation.mutate(idAEliminar);
+          }
+        }}
+        onClose={() => setIdAEliminar(null)}
+      />
+
+      {/* Modal de Alerta / Error */}
+      <AlertModal
+        isOpen={alertaMensaje !== null}
+        title="Error al eliminar"
+        message={alertaMensaje ?? ""}
+        onClose={() => setAlertaMensaje(null)}
       />
     </div>
   );

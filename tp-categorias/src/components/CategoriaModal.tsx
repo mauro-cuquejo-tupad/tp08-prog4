@@ -1,6 +1,7 @@
 import React from "react";
 import { useForm } from "@tanstack/react-form";
 import type { Categoria, CategoriaFormData } from "../types/categoria";
+import { useEscapeKey } from "../hooks/useEscapeKey";
 
 interface CategoriaModalProps {
   isOpen: boolean;
@@ -19,6 +20,8 @@ export const CategoriaModal: React.FC<CategoriaModalProps> = ({
   isLoading = false,
   apiError = null,
 }) => {
+  useEscapeKey(onClose, isOpen && !isLoading);
+
   const form = useForm({
     defaultValues: {
       nombre: categoriaSeleccionada?.nombre ?? "",

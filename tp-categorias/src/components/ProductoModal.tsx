@@ -1,6 +1,7 @@
 import React from "react";
 import { useForm } from "@tanstack/react-form";
 import type { Producto, ProductoFormData } from "../types/producto";
+import { useEscapeKey } from "../hooks/useEscapeKey";
 
 interface ProductoModalProps {
   isOpen: boolean;
@@ -19,6 +20,8 @@ export const ProductoModal: React.FC<ProductoModalProps> = ({
   isLoading = false,
   apiError = null,
 }) => {
+  useEscapeKey(onClose, isOpen && !isLoading);
+
   const form = useForm({
     defaultValues: {
       nombre: productoSeleccionado?.nombre ?? "",

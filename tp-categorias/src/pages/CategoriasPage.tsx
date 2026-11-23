@@ -10,6 +10,7 @@ import {
 import { CategoriaList } from "../components/CategoriaList";
 import { CategoriaModal } from "../components/CategoriaModal";
 import { LoadingState, ErrorState } from "../components/StatusStates";
+import { ConfirmModal, AlertModal } from "../components/FeedbackModals";
 
 export const CategoriasPage: React.FC = () => {
   const queryClient = useQueryClient();
@@ -17,6 +18,10 @@ export const CategoriasPage: React.FC = () => {
   const [modalAbierto, setModalAbierto] = useState(false);
   const [categoriaSeleccionada, setCategoriaSeleccionada] = useState<Categoria | null>(null);
   const [apiError, setApiError] = useState<string | null>(null);
+
+  // Estados para modales de feedback
+  const [idAEliminar, setIdAEliminar] = useState<number | null>(null);
+  const [alertaMensaje, setAlertaMensaje] = useState<string | null>(null);
 
   const {
     data: categorias = [],
@@ -56,9 +61,11 @@ export const CategoriasPage: React.FC = () => {
     mutationFn: (id: number) => deleteCategoria(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["categorias"] });
+      setIdAEliminar(null);
     },
     onError: (err: Error) => {
-      alert(`No se pudo eliminar la categoría: ${err.message}`);
+      setAlertaMensaje(`No se pudo eliminar la categoría: ${err.message}`);
+      setIdAEliminar(null);
     },
   });
 
@@ -86,12 +93,6 @@ export const CategoriasPage: React.FC = () => {
       updateMutation.mutate({ id: categoriaSeleccionada.id, data });
     } else {
       createMutation.mutate(data);
-    }
-  };
-
-  const handleDelete = (id: number) => {
-    if (window.confirm("¿Está seguro de que desea eliminar esta categoría?")) {
-      deleteMutation.mutate(id);
     }
   };
 
@@ -125,10 +126,11 @@ export const CategoriasPage: React.FC = () => {
         <CategoriaList
           categorias={categorias}
           onEdit={abrirParaEditar}
-          onDelete={handleDelete}
+          onDelete={(id) => setIdAEliminar(id)}
         />
       )}
 
+      {/* Modal Formulario */}
       <CategoriaModal
         isOpen={modalAbierto}
         onClose={cerrarModal}
@@ -136,6 +138,29 @@ export const CategoriasPage: React.FC = () => {
         categoriaSeleccionada={categoriaSeleccionada}
         isLoading={isMutating}
         apiError={apiError}
+      />
+
+      {/* Modal de Confirmación de Eliminación */}
+      <ConfirmModal
+        isOpen={idAEliminar !== null}
+        title="Eliminar Categoría"
+        message="¿Está seguro de que desea eliminar esta categoría? Esta acción no se puede deshacer."
+        confirmText="Eliminar"
+        isDestructive={true}
+        onConfirm={() => {
+          if (idAEliminar !== null) {
+            deleteMutation.mutate(idAEliminar);
+          }
+        }}
+        onClose={() => setIdAEliminar(null)}
+      />
+
+      {/* Modal de Alerta / Error */}
+      <AlertModal
+        isOpen={alertaMensaje !== null}
+        title="Error al eliminar"
+        message={alertaMensaje ?? ""}
+        onClose={() => setAlertaMensaje(null)}
       />
     </div>
   );

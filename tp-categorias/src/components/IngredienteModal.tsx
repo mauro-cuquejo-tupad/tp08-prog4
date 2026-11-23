@@ -1,6 +1,7 @@
 import React from "react";
 import { useForm } from "@tanstack/react-form";
 import type { Ingrediente, IngredienteFormData } from "../types/ingrediente";
+import { useEscapeKey } from "../hooks/useEscapeKey";
 
 interface IngredienteModalProps {
   isOpen: boolean;
@@ -19,6 +20,8 @@ export const IngredienteModal: React.FC<IngredienteModalProps> = ({
   isLoading = false,
   apiError = null,
 }) => {
+  useEscapeKey(onClose, isOpen && !isLoading);
+
   const form = useForm({
     defaultValues: {
       nombre: ingredienteSeleccionado?.nombre ?? "",
