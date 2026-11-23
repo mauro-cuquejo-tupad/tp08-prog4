@@ -1,22 +1,24 @@
-from sqlmodel import Session, create_engine
-from app.core.database import engine
+from sqlmodel import Session
+from app.core.database import session_factory
 
 class AbstractUnitOfWork:
-    def __init__(self, db_engine=None):
-        self._engine = db_engine or engine
+    def __init__(self, factory=session_factory):
+        self.session_factory = factory
         self.session: Session | None = None
 
     def __enter__(self):
-        self.session = Session(self._engine)
+        self.session = self.session_factory()
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        if self.session:
-            if exc_type is not None:
+        try:
+            if exc_type:
                 self.rollback()
             else:
                 self.commit()
-            self.session.close()
+        finally:
+            if self.session:
+                self.session.close()
 
     def commit(self):
         if self.session:

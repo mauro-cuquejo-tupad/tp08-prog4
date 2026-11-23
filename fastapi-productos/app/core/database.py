@@ -28,3 +28,6 @@ def get_session():
         # Al terminar el request:
         # - se cierra la sesión
         # - se devuelve la conexión al pool
+
+def session_factory() -> Session:
+    return Session(engine)

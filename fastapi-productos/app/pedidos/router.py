@@ -9,10 +9,12 @@ from app.pedidos.service import (
 )
 from app.pedidos.unit_of_work import PedidoUnitOfWork
 
+from app.core.database import session_factory
+
 router = APIRouter(prefix="/pedidos", tags=["pedidos"])
 
 def get_pedido_service() -> PedidoService:
-    return PedidoService(PedidoUnitOfWork())
+    return PedidoService(PedidoUnitOfWork(session_factory))
 
 def pedido_no_encontrado() -> HTTPException:
     return HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Pedido no encontrado")
