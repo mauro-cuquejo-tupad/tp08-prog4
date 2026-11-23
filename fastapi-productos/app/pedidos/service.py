@@ -78,6 +78,6 @@ class PedidoService:
             if not pedido:
                 raise PedidoNoEncontrado(pedido_id)
 
-            # Borrado lógico: completamos deleted_at
+            # Borrado lógico:
             pedido.deleted_at = datetime.now(timezone.utc)
             uow.pedidos.update(pedido)

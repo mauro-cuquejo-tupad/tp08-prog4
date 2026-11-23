@@ -106,7 +106,7 @@ export const CategoriasPage: React.FC = () => {
             Categorías
           </h1>
           <p className="mt-1 text-sm text-slate-500">
-            Administración completa del catálogo de categorías con TanStack Table y TanStack Form
+            Administración de categorías
           </p>
         </div>
         <button

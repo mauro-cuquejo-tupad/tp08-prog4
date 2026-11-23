@@ -106,7 +106,7 @@ export const ProductsPage: React.FC = () => {
             Productos
           </h1>
           <p className="mt-1 text-sm text-slate-500">
-            Gestión completa de productos con TanStack Table v8 y TanStack Form
+            Administración de productos
           </p>
         </div>
         <button

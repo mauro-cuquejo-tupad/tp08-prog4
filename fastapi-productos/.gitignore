@@ -32,7 +32,7 @@ venv/
 ENV/
 env/
 
-# Environment variables (incluido para corrección de TPs)
+# Environment variables (incluido para el TP)
 # .env
 
 

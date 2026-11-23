@@ -20,7 +20,7 @@ __pycache__/
 *$py.class
 *.egg-info/
 
-# Environment variables (incluido para corrección de TPs)
+# Environment variables (incluido para el TP)
 # .env
 # .env.*
 
