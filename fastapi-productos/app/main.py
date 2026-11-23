@@ -1,6 +1,8 @@
+import os
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from app.core.database import create_db_and_tables
+from seed import seed_data
 import app.producto.model  # Registra las tablas en SQLModel.metadata
 import app.categoria.model
 import app.ingrediente.model
@@ -14,6 +16,12 @@ from fastapi.middleware.cors import CORSMiddleware
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     create_db_and_tables()
+
+    # Ejecutar seed al inicio si el flag está activo (activo por default)
+    seed_enabled = os.getenv("SEED_ON_STARTUP", "true").lower() in ("true", "1", "yes")
+    if seed_enabled:
+        seed_data()
+
     yield
 
 def create_app() -> FastAPI:
