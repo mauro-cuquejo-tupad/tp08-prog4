@@ -59,7 +59,7 @@ tp08-prog4-main/
 │   │   │   ├── repository.py
 │   │   │   ├── service.py
 │   │   │   └── router.py
-│   │   ├── pedidos/               # Arquitectura Models-Schemas-Repository-UoW-Service-Router
+│   │   ├── pedidos/               # CRUD Pedidos
 │   │   │   ├── models.py          # Pedido y DetallePedido
 │   │   │   ├── schemas.py         # PedidoCreate, PedidoRead, PedidoReadFull, PedidoUpdateEstado
 │   │   │   ├── repository.py      # PedidoRepository, DetallePedidoRepository
