@@ -1,6 +1,5 @@
 # Backend - Gestor Gastronómico (FastAPI + SQLModel + PostgreSQL)
-**Materia:** Programación IV - UTN  
-**Unidad 8:** Formularios y Tablas / Unit of Work y Repository  
+**Materia:** Programación 4 - UTN  
 **Alumno:** Mauro Cuquejo  
 
 API REST desarrollada con **FastAPI** y **SQLModel** para la gestión de Categorías, Productos, Ingredientes y Pedidos con sus detalles.
@@ -9,35 +8,40 @@ API REST desarrollada con **FastAPI** y **SQLModel** para la gestión de Categor
 
 ## 🏛️ Arquitectura
 
-El módulo de **Pedidos** aplica de forma rigurosa el patrón **Models - Schemas - Repository - Unit of Work (UoW) - Service - Router**:
+El módulo de **Pedidos** aplica el patrón **Models - Schemas - Repository - Unit of Work - Service - Router**:
 
 - **Models:**
-  - `Pedido`: `id` (autoincremental), `fecha` (datetime asignada por el backend), `estado` (PENDIENTE, CONFIRMADO, ENTREGADO o CANCELADO), `total` (suma calculada de detalles) y `deleted_at` (soporte de borrado lógico).
-  - `DetallePedido`: clave primaria compuesta (`pedido_id`, `producto_id`), `cantidad` (>= 1) y `precio_unitario` (obtenido del `precio_base` del producto al crearse).
+  - `Pedido`: `id`, `fecha` en formato UTC, `estado` (PENDIENTE, CONFIRMADO, ENTREGADO o CANCELADO), `total` calculado a partir de los detalles y `deleted_at` para borrado lógico.
+  - `DetallePedido`: clave primaria compuesta por `pedido_id` y `producto_id`, `cantidad` y `precio_unitario` tomado del producto al momento de crear el pedido.
 - **Schemas:**
-  - `PedidoCreate`: valida que contenga al menos un detalle (`min_length=1`), cantidades >= 1 y rechaza productos repetidos retornando **HTTP 422**.
-  - `PedidoUpdateEstado`: valida estados permitidos retornando **HTTP 422** si se envía un valor no reconocido.
-  - `PedidoRead` y `DetallePedidoRead`: serialización tipada para respuestas.
+  - `PedidoCreate`: valida que contenga al menos un detalle, cantidades válidas y rechaza productos duplicados con código 422.
+  - `PedidoUpdateEstado`: valida estados permitidos mediante `Literal` respondiendo 422 si se envía un valor no reconocido.
+  - `PedidoRead`: serialización para listados sin detalles.
+  - `PedidoReadFull`: serialización completa con la lista de detalles para creación y consulta individual.
 - **Repository:**
-  - `PedidoRepository` y `DetallePedidoRepository`: extienden de `BaseRepository[T]`, manejan queries sin invocar `commit()`.
+  - `PedidoRepository` y `DetallePedidoRepository`: extienden de `BaseRepository` y encapsulan las consultas sin confirmar transacciones.
 - **Unit of Work:**
-  - `PedidoUnitOfWork`: maneja la sesión con context manager (`with uow:`), garantizando atomicidad transaccional: commit automático al completar el bloque o rollback ante cualquier excepción.
+  - `PedidoUnitOfWork`: maneja la sesión mediante `session_factory` dentro de un context manager con bloque try/finally, asegurando atomicidad transaccional con commit al finalizar o rollback ante cualquier excepción.
 - **Service:**
-  - `PedidoService`: aplica lógica de negocio. Si un producto en los detalles no existe, arroja `ProductoNoEncontrado`, revirtiendo completamente la transacción. El borrado es lógico completando `deleted_at`.
+  - `PedidoService`: aplica las reglas de negocio dentro del Unit of Work. Si un producto no existe arroja excepción para revertir la transacción completa y traducirla a 404. El borrado es lógico completando `deleted_at`.
 - **Router:**
-  - `APIRouter(prefix="/pedidos", tags=["pedidos"])`: captura excepciones del servicio y las transforma en respuestas HTTP pertinentes (**404**, **422**, **409**).
+  - `APIRouter(prefix="/pedidos", tags=["pedidos"])`: inyecta el servicio mediante `Depends` y traduce las excepciones de negocio a respuestas HTTP con códigos 404, 409 y 422.
 
-Asimismo, se incorporan los módulos de **Categorías**, **Productos** e **Ingredientes** (con validaciones de no vacío `StringConstraints(strip_whitespace=True, min_length=1)` y control de unicidad).
+Se incorporan también los módulos de **Categorías**, **Productos** e **Ingredientes** con validaciones de strings no vacíos y control de unicidad. Al eliminar un producto asociado a pedidos existentes se captura el error de base de datos respondiendo con código 409.
 
 ---
 
 ## 🚀 Instalación y Ejecución
 
 1. **Crear y activar entorno virtual:**
+   En Windows:
    ```bash
    python -m venv .venv
-   .\.venv\Scripts\activate       # Windows
-   # source .venv/bin/activate     # Linux / macOS
+   .\.venv\Scripts\activate
+   ```
+   En Linux o macOS:
+   ```bash
+   source .venv/bin/activate
    ```
 
 2. **Instalar dependencias:**
@@ -46,32 +50,24 @@ Asimismo, se incorporan los módulos de **Categorías**, **Productos** e **Ingre
    ```
 
 3. **Configurar base de datos:**
-   Asegurar las credenciales en el archivo `.env`:
+   Revisar el archivo `.env`:
    ```env
    DATABASE_URL=postgresql+psycopg://postgres:mipasswordseguro@localhost:5432/gestor_productos
+   RESET_DB_ON_STARTUP=false
+   SEED_ON_STARTUP=true
    ```
 
-4. **Poblar datos de prueba (Seed):**
-   ```bash
-   python seed.py
-   ```
-
-5. **Iniciar el servidor:**
+4. **Iniciar el servidor:**
    ```bash
    python -m fastapi dev app/main.py
    ```
-   - Documentación Swagger interactiva: [http://localhost:8000/docs](http://localhost:8000/docs)
+   - Swagger interactivo: http://localhost:8000/docs
 
 ---
 
 ## 🧪 Pruebas con REST Client
 
-El archivo `pedidos.http` contiene la suite de pruebas lista para ejecutar con la extensión REST Client:
-- `GET /pedidos`: listado de pedidos activos.
-- `POST /pedidos` con casos de validación **422** (lista vacía, cantidad < 1, producto duplicado).
-- `POST /pedidos` con caso **404** (producto inexistente demostrando rollback atómico).
-- `POST /pedidos` con caso exitoso **201**.
-- `GET /pedidos/{id}`: detalle del pedido creado.
-- `PUT /pedidos/{id}`: actualización de estado y caso **422** con estado inválido.
-- `DELETE /pedidos/{id}`: borrado lógico (204).
-- `GET /pedidos/{id}` posterior: comprobación de respuesta **404**.
+Los archivos `.http` contienen la suite de pruebas lista para ejecutar:
+- `ingredientes.http`: pruebas completas de CRUD, validaciones 422, duplicados 409 y borrado.
+- `pedidos.http`: pruebas de flujo dinámico tomando productos existentes, errores 422, rollback atómico 404, cambio de estado y borrado lógico.
+- `productos.http`: pruebas de productos, categorías y relación muchos a muchos.

@@ -1,33 +1,28 @@
 # Frontend - Gestor Gastronómico (React + TypeScript + Vite)
-**Materia:** Programación IV - UTN  
-**Unidad 8:** Formularios y Tablas  
+**Materia:** Programación 4 - UTN  
 **Alumno:** Mauro Cuquejo  
 
-Frontend SPA interactivo construido con React 19, TypeScript, Vite, Tailwind CSS, TanStack Query, TanStack Form y TanStack Table v8.
+Frontend SPA interactivo construido con React, TypeScript, Vite, Tailwind CSS, TanStack Query, TanStack Form y TanStack Table v8.
 
 ---
 
 ## 📦 Características Principales
 
 1. **Páginas y Navegación:**
-   - `/` y `/categorias`: `CategoriasPage` para administración completa de categorías.
-   - `/productos`: `ProductsPage` para gestión completa de productos.
-   - `/ingredientes`: `IngredientesPage` para gestión de ingredientes.
-   - Enlaces accesibles desde `Navbar.tsx` con `react-router-dom`.
-   - `App.tsx` centrado únicamente en definir rutas y montar layout.
+   - Rutas `/` y `/categorias`: `CategoriasPage` para administración de categorías.
+   - Ruta `/productos`: `ProductsPage` para administración de productos.
+   - Ruta `/ingredientes`: `IngredientesPage` para administración de ingredientes.
+   - Barra de navegación superior con enlaces de React Router y `Footer` fijo al pie en el layout de `App.tsx`.
 
-2. **TanStack Table (v8):**
-   - Implementado en cada listado (`CategoriaList`, `ProductoList`, `IngredienteList`).
-   - Soporte de ordenamiento por columnas con `getSortedRowModel`.
-   - Paginación dinámica con `getPaginationRowModel` y controles Anterior / Siguiente.
-   - Búsqueda en tiempo real con `getFilteredRowModel`.
-   - Componentes modulares y reutilizables para estados de **carga** (`LoadingState`), **vacío** (`EmptyState`) y **error de red** (`ErrorState`) con Tailwind CSS.
+2. **TanStack Table v8:**
+   - Tablas interactivas en cada página con ordenamiento por columnas, paginación con controles anterior y siguiente, y filtro de búsqueda en tiempo real.
+   - Componentes modulares para estados de carga, vacío y error de red con Tailwind CSS.
 
-3. **TanStack Form:**
-   - Formularios modales de creación y edición (`CategoriaModal`, `ProductoModal`, `IngredienteModal`).
-   - Validación tipada por campo (`form.Field` con `validators`).
-   - Botón de guardado reactivo con `form.Subscribe` para deshabilitar mientras es inválido o se está enviando (`canSubmit`, `isSubmitting`).
-   - Mensajes de error de API integrados sin cerrar el modal ante respuestas 409 o 422.
+3. **TanStack Form y Modales:**
+   - Modales de creación y edición controlados con `useState`.
+   - Validación tipada por campo y botón de guardado deshabilitado mientras el formulario es inválido o se está enviando.
+   - Modales de confirmación para eliminaciones y alertas para mensajes de error del servidor.
+   - Hook personalizado `useEscapeKey` para cerrar cualquier modal con la tecla Escape o con el botón cancelar.
 
 ---
 
@@ -35,17 +30,17 @@ Frontend SPA interactivo construido con React 19, TypeScript, Vite, Tailwind CSS
 
 1. **Instalar dependencias:**
    ```bash
-   pnpm install
+   npm install
    ```
 
-2. **Ejecutar servidor local:**
+2. **Iniciar servidor de desarrollo:**
    ```bash
-   pnpm dev
+   npm run dev
    ```
-   La aplicación correrá en [http://localhost:5173](http://localhost:5173).
+   La aplicación correrá en http://localhost:5173.
 
 3. **Comprobar tipado y build:**
    ```bash
-   npx tsc --noEmit
-   pnpm build
+   npx tsc -b
+   npm run build
    ```
